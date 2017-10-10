@@ -114,7 +114,7 @@
 %% \end{minipage}
 %% \end{frame}
 
-%% \begin{frame}[fragile]{Experiment to try sometime (2)}
+%% \begin{frame}[fragile]{Experiment to try sometime: hardcore version}
 %% \vspace{0.1 cm}
 %% \scriptsize
 %% \begin{minted}{python}
@@ -148,9 +148,8 @@
 %% \vspace{-8 cm}\hfill\begin{minipage}{0.35\linewidth}
 %% \begin{uncoverenv}<2->
 %% \begin{center}
-%% Even if you go hardcore,
+%% Not much faster:
 
-%% \vspace{0.25 cm}
 %% \textcolor{darkblue}{$10^6$~events / 0.203 sec = 4.9~MHz}
 %% \end{center}
 %% \end{uncoverenv}
@@ -158,26 +157,100 @@
 %% \end{minipage}
 %% \end{frame}
 
-\begin{frame}{}
+%% \begin{frame}{}
+%% \vspace{1 cm}
+%% \begin{center}
+%% \large If you're computing masses considerably slower than 5~million per second, most of your computer's time is spent doing something other than physics.
+%% \end{center}
+
+%% \vspace{0.5 cm}
+%% \begin{itemize}
+%% \item<2-> Usually, it's for a very good reason: managing complexity.
+%% \item<3-> You'll notice that I set up those examples in Python. Python is one of the slowest languages available. It spends most of its time presenting a simple data model and a safe environment to the user (me).
+%% \item<4-> But when you've got your task expressed in mathematical form, you'd like it to spend all of its time computing.
+%% \end{itemize}
+%% \end{frame}
+
+\begin{frame}{Bypassing ROOT's TTree::GetEntry}
+\vspace{0.5 cm}
+ROOT data are stored in an efficient format--- arrays similar to the Numpy example on the previous page.
+
 \vspace{1 cm}
+\uncover<2->{But pieces of each array are spliced into local variables each time {\tt GetEntry} is called. (Also, it's fairly complex, thwarts vectorization, virtual function calls\ldots)}
+
+\vspace{1 cm}
+\uncover<3->{Accessing the data without {\tt GetEntry} (which includes {\tt TTree::Draw}!) is an order of magnitude faster. We're adding a method to ROOT 6.12 (next version) to dump data directly into Numpy arrays.}
+\end{frame}
+
+\begin{frame}{Illustration using NanoAOD decompression rate studies}
 \begin{center}
-\large If you're computing masses considerably slower than 5~million per second, most of your computer's time is spent doing something other than physics.
+\textcolor{darkblue}{\large Hint: vertical scale on right is 30$\times$ higher, reaches 0.5~MHz}
 \end{center}
 
-\vspace{0.5 cm}
-\begin{itemize}
-\item<2-> Usually, it's for a very good reason: managing complexity.
-\item<3-> You'll notice that I set up those examples in Python. Python is one of the slowest languages available. It spends most of its time presenting a simple data model and a safe environment to the user (me).
-\item<4-> But when you've got your task expressed in mathematical form, you'd like it to spend all of its time computing.
-\end{itemize}
+\begin{columns}
+\column{0.45\linewidth}
+\mbox{ } \hfill Reading through {\tt GetEntry} \hfill \mbox{ }
+
+\includegraphics[width=\linewidth]{read.png}
+
+\column{0.45\linewidth}
+\mbox{ } \hfill New ROOT-to-Numpy method \hfill \mbox{ }
+
+\includegraphics[width=\linewidth]{bulk.png}
+
+\end{columns}
 \end{frame}
 
-\begin{frame}{Bypassing ROOT's {\tt TTree::GetEntry}}
+\begin{frame}{ROOT 6.12 isn't out yet\ldots}
 \vspace{0.5 cm}
+So I wrote this access method in pure Python+Numpy:
 
+\begin{center}
+\href{https://github.com/scikit-hep/uproot}{\textcolor{blue}{\Large https://github.com/scikit-hep/uproot}}
+\end{center}
 
+\includegraphics[width=\linewidth]{uproot.png}
 
+\begin{center}
+\Large \textcolor{red}{\tt pip install uproot --user}
+\end{center}
 \end{frame}
+
+\begin{frame}{But\ldots\ Python is slow\ldots\ why Python???}
+\vspace{0.5 cm}
+{\large If you're reading a reasonably large file (GB+), most of the time is spent in a Numpy call, not Python.}
+
+\vspace{0.5 cm}
+\begin{uncoverenv}<2->
+\begin{tabular}{l c c c}
+& \underline{Time to open file} & & \\
+C++/{\tt GetEntry} & 0.50 sec & & \\
+Python/uproot & 0.03 sec & & \\
+& & & \\
+ & \underline{Time to read file} & \underline{Event rate} & \underline{Data rate} \\
+C++/{\tt GetEntry} & 4.62 sec & 1.9 MHz & \textcolor{white}{0}230 MB/sec \\
+Python/uproot & 0.93 sec & 9.2 MHz & 1160 MB/sec \\
+& & & \\
+& \underline{Time to read 1 branch} & \underline{Event rate} & \underline{Data rate} \\
+C++/{\tt GetEntry} & 0.256 sec & \textcolor{white}{0}33 MHz & \textcolor{white}{0}260 MB/sec \\
+Python/uproot & 0.064 sec & 133 MHz & 1020 MB/sec
+\end{tabular}
+\end{uncoverenv}
+
+\vspace{-5.5 cm}\hfill\begin{minipage}{0.35\linewidth}
+\begin{uncoverenv}<3->
+\begin{center}
+\large
+\textcolor{darkblue}{about 5$\times$ faster}
+
+\vspace{0.1 cm}
+\textcolor{darkblue}{(rather than 30$\times$)}
+\end{center}
+\end{uncoverenv}
+\vspace{5.5 cm}
+\end{minipage}
+\end{frame}
+
 
 
 \end{document}
