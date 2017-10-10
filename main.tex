@@ -52,8 +52,132 @@
 
 %%%% START
 
-\begin{frame}{First slide}
-\vspace{0.15 cm}
+%% \begin{frame}{Purpose of this talk}
+%% \vspace{0.15 cm}
+%% \begin{center}
+%% \large To show you some of the software packages I've been developing \underline{so you can use them} and either get more productive or send me critical feedback.
+
+%% \vspace{1 cm}
+%% \uncover<2->{(I'm looking for beta testers.)}
+%% \end{center}
+%% \end{frame}
+
+%% \begin{frame}{What is the software for?}
+%% \vspace{0.15 cm}
+%% \large Ultimately, I and several others\footnote{Oliver Gutsche, Igor Mandrichenko (FNAL), Tanu Malik (DePaul CS), \mbox{Jean-Roch Vlimant (CalTech),\hspace{-1 cm}} Manos Karpathiotakis, Miguel Branco, Ioannis Alagiannis, Anastasia Ailamaki (EPFL/ATLAS)\ldots} want to develop a centralized service that will respond to requests for plots more rapidly than local skims.
+
+%% \vspace{0.5 cm}
+%% \uncover<2->{The trick is to make it respond quickly enough that you'll use it.}
+
+%% \vspace{0.5 cm}
+%% \uncover<3->{We're still at the stage of studying the scaling behaviors of various options, but meanwhile, I've been developing fast data access methods that you can use now, independently of any query system.}
+
+%% \vspace{0.5 cm}
+%% \uncover<4->{You can\ldots\ er\ldots\ use it on your skims.}
+%% \end{frame}
+
+%% \begin{frame}[fragile]{Experiment to try sometime}
+%% \vspace{0.25 cm}
+%% \textcolor{darkblue}{How long \underline{should} it take to compute something?}
+
+%% \small
+%% \begin{minted}{python}
+%% from time import *
+%% from numpy import *
+
+%% pt1 = random.normal(0, 1, int(1e6))**2
+%% eta1 = random.uniform(-5, 5, int(1e6))
+%% phi1 = random.uniform(-5, 5, int(1e6))
+
+%% pt2 = random.normal(0, 1, int(1e6))**2
+%% eta2 = random.uniform(-5, 5, int(1e6))
+%% phi2 = random.uniform(-5, 5, int(1e6))
+
+%% start = time()
+%% mass = sqrt(2*pt1*pt2*(cosh(eta1 - eta2) - cos(phi1 - phi2)))
+%% end = time()
+
+%% print(end - start)
+%% \end{minted}
+
+%% \normalsize
+%% \vspace{-6 cm}\hfill\begin{minipage}{0.35\linewidth}
+%% \begin{uncoverenv}<2->
+%% \begin{center}
+%% \textcolor{darkblue}{$10^6$~events / 0.24 sec = 4.16~MHz}
+
+%% \vspace{0.25 cm}
+%% We need to get used to numbers like this.
+%% \end{center}
+%% \end{uncoverenv}
+%% \vspace{6 cm}
+%% \end{minipage}
+%% \end{frame}
+
+%% \begin{frame}[fragile]{Experiment to try sometime (2)}
+%% \vspace{0.1 cm}
+%% \scriptsize
+%% \begin{minted}{python}
+%% import ctypes
+%% import os
+
+%% open("little-c-function.c", "w").write("""
+%% #include "math.h"
+
+%% void computemass(double* pt1, double* eta1, double* phi1,
+%%                  double* pt2, double* eta2, double* phi2,
+%%                  double* mass) {
+%%   int i;
+%%   for (i = 0;  i < (int)1e6;  i++)
+%%     mass[i] = sqrt(2*pt1[i]*pt2[i]*(cosh(eta1[i] - eta2[i]) - cos(phi1[i] - phi2[i])));
+%% }
+%% """)
+%% os.system("gcc -O3 -shared -fPIC little-c-function.c -o little-c-function.so")
+
+%% computemass = ctypes.cdll.LoadLibrary("little-c-function.so").computemass
+%% output = numpy.empty(int(1e6))
+
+%% start = time()
+%% computemass(*[x.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+%%                                    for x in pt1, eta1, phi1, pt2, eta2, phi2, output])
+%% end = time()
+
+%% print(end - start)
+%% \end{minted}
+%% \normalsize
+%% \vspace{-8 cm}\hfill\begin{minipage}{0.35\linewidth}
+%% \begin{uncoverenv}<2->
+%% \begin{center}
+%% Even if you go hardcore,
+
+%% \vspace{0.25 cm}
+%% \textcolor{darkblue}{$10^6$~events / 0.203 sec = 4.9~MHz}
+%% \end{center}
+%% \end{uncoverenv}
+%% \vspace{8 cm}
+%% \end{minipage}
+%% \end{frame}
+
+\begin{frame}{}
+\vspace{1 cm}
+\begin{center}
+\large If you're computing masses considerably slower than 5~million per second, most of your computer's time is spent doing something other than physics.
+\end{center}
+
+\vspace{0.5 cm}
+\begin{itemize}
+\item<2-> Usually, it's for a very good reason: managing complexity.
+\item<3-> You'll notice that I set up those examples in Python. Python is one of the slowest languages available. It spends most of its time presenting a simple data model and a safe environment to the user (me).
+\item<4-> But when you've got your task expressed in mathematical form, you'd like it to spend all of its time computing.
+\end{itemize}
 \end{frame}
+
+\begin{frame}{Bypassing ROOT's {\tt TTree::GetEntry}}
+\vspace{0.5 cm}
+
+
+
+\end{frame}
+
 
 \end{document}
