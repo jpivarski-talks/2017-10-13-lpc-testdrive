@@ -173,10 +173,10 @@
 
 \begin{frame}{Bypassing ROOT's TTree::GetEntry}
 \vspace{0.5 cm}
-ROOT data are stored in an efficient format--- arrays similar to the Numpy example on the previous page.
+ROOT data are stored in an efficient format--- arrays similar to the Numpy example on the previous page. (TBranches chopped up into TBaskets\ldots)
 
 \vspace{1 cm}
-\uncover<2->{But pieces of each array are spliced into local variables each time {\tt GetEntry} is called. (Also, it's fairly complex, thwarts vectorization, virtual function calls\ldots)}
+\uncover<2->{But {\tt TTree::GetEntry} is slow: pieces of each array are spliced into local variables each time it's called. (Also, it thwarts vectorization, has virtual function calls\ldots)}
 
 \vspace{1 cm}
 \uncover<3->{Accessing the data without {\tt GetEntry} (which includes {\tt TTree::Draw}!) is an order of magnitude faster. We're adding a method to ROOT 6.12 (next version) to dump data directly into Numpy arrays.}
@@ -240,26 +240,26 @@ Python/uproot & 0.064 sec & 133 MHz & 1020 MB/sec
 {\scriptsize $^{\mbox{\scriptsize *}}$from \href{https://indico.cern.ch/event/567550/contributions/2628878/}{\textcolor{blue}{Jakob Blomer's 2017 ACAT talk}} about ROOT performance, 1 GB uncompressed, flat table from LHCb.}
 \end{uncoverenv}
 
-\vspace{-6.1 cm}\hfill\begin{minipage}{0.35\linewidth}
+\vspace{-6.4 cm}\hfill\begin{minipage}{0.35\linewidth}
 \begin{uncoverenv}<3->
 \begin{center}
 \large
-\textcolor{darkblue}{about 5$\times$ faster}
+\textcolor{darkblue}{about 5$\times$ faster than C++/{\tt GetEntry}}
 
 \vspace{0.1 cm}
-\textcolor{darkblue}{(rather than 30$\times$)}
+\textcolor{darkblue}{(instead of 30$\times$)}
 \end{center}
 \end{uncoverenv}
-\vspace{6.1 cm}
+\vspace{6.4 cm}
 \end{minipage}
 \end{frame}
 
-\begin{frame}{But\ldots\ Python can't be parallelized because of the GIL}
+\begin{frame}{But\ldots\ Python can't be parallelized because of the GIL, right?}
 \vspace{0.4 cm}
-{\large Python's Global Interpreter Lock (GIL) thwarts parallelization performance of Python statements, but external calls to Numpy release this lock.}
+{\large Python's Global Interpreter Lock (GIL) thwarts parallelization performance of {\it Python statements,} but external calls to Numpy release this lock.}
 
 \vspace{0.35 cm}
-\textcolor{darkblue}{uproot scales up to about 30 threads (Knight's Landing with 128 threads below).}
+\textcolor{darkblue}{uproot scales up to about 30 threads \mbox{(Knight's Landing with 128 threads shown below).\hspace{-1 cm}}}
 
 \vspace{0.35 cm}
 \begin{columns}
@@ -274,8 +274,10 @@ Python/uproot & 0.064 sec & 133 MHz & 1020 MB/sec
 
 \vspace{0.2 cm}
 \includegraphics[width=\linewidth]{uproot-scaling-2.png}
-
 \end{columns}
 \end{frame}
+
+
+
 
 \end{document}
