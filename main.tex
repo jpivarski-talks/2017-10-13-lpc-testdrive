@@ -62,22 +62,28 @@
 \end{center}
 \end{frame}
 
-\begin{frame}{What is the software for?}
+\begin{frame}{What is this software for, in the long run?}
 \vspace{0.15 cm}
 \large Ultimately, I and several others\footnote{Oliver Gutsche, Igor Mandrichenko (FNAL), Tanu Malik (DePaul CS), \mbox{Jean-Roch Vlimant (CalTech),\hspace{-1 cm}} Manos Karpathiotakis, Miguel Branco, Ioannis Alagiannis, Anastasia Ailamaki (EPFL/ATLAS)\ldots} want to develop a centralized service that will make plots more rapidly than you can with local skims.
 
 \vspace{0.5 cm}
-\uncover<2->{(The trick is to make it respond quickly enough that you'll use it.)}
+\uncover<2->{Think Google-for-HEP data. You submit a query and get a response on a short enough timescale to influence your next question.}
 
 \vspace{0.5 cm}
-\uncover<3->{We're still at the stage of studying the scaling behaviors of various options, but meanwhile, I've been developing fast data access methods that you can use now, independently of any query system.}
+\uncover<3->{We're still at the stage of testing various options, but meanwhile, I've been developing fast data access methods that you can use now, independently of any query system.}
 
 \vspace{0.5 cm}
-\uncover<4->{You can\ldots\ er\ldots\ use it on your skims.}
+\uncover<4->{You can use it on your skims. (Same tools, different purpose.)}
 \end{frame}
 
-\begin{frame}{Most of what I'll show is about making plots faster}
-\vspace{0.35 cm}
+\begin{frame}{}
+\begin{center}
+\LARGE What I'll be showing today are various tools \\ for doing offline analysis faster.
+\end{center}
+\end{frame}
+
+\begin{frame}{}
+\vspace{1.2 cm}
 \textcolor{darkblue}{Mental model of computing performance:} it isn't about speeding up your code, it's about {\it not slowing it down.} The mathematical function you want to compute has a fundamental speed set by the clock rate: everything else just gets in the way.
 
 \begin{center}
@@ -88,7 +94,7 @@
 \begin{frame}[fragile]{Experiment to try sometime}
 \vspace{0.25 cm}
 \begin{center}
-\textcolor{darkorange}{\bf How long \underline{should} it take to compute something like a mass?}
+\textcolor{darkorange}{\bf How long \underline{should} it take to compute an analysis function?}
 \end{center}
 
 \small
@@ -156,7 +162,7 @@ print(end - start)
 \vspace{-8 cm}\hfill\begin{minipage}{0.35\linewidth}
 \begin{uncoverenv}<2->
 \begin{center}
-Not much faster:
+Hardcore is not much faster:
 
 \textcolor{darkblue}{$10^6$~events / 0.203 sec = 4.9~MHz}
 \end{center}
@@ -173,21 +179,41 @@ Not much faster:
 
 \vspace{0.5 cm}
 \begin{itemize}
-\item<2-> Usually, it's for a very good reason: managing complexity.
-\item<3-> You'll notice that I set up those examples in Python. Python is one of the slowest languages available. It spends most of its time presenting a simple data model and a safe environment to the user (me).
-\item<4-> But you don't need that in the middle of a loop over all events. You can waste whole seconds setting up the calculation, but once it's specified, you want it to go at full speed.
+\item<2-> Usually, there's a good reason: loading data or managing complexity.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Loading data: cold to warm cache}
+\vspace{0.25 cm}
+\begin{center}
+\only<1>{\includegraphics[width=0.67\linewidth]{storage-latency-how-far-away-is-the-data.png}}
+\only<2>{\includegraphics[width=\linewidth]{what-you-do-1.pdf}}
+\only<3>{\includegraphics[width=\linewidth]{what-you-do-2.pdf}}
+\end{center}
+\end{frame}
+
+\begin{frame}{Managing complexity}
+\vspace{0.5 cm}
+\begin{itemize}\setlength{\itemsep}{0.4 cm}
+\item Python is one of the slowest languages available, and yet I used it for the high-speed mass calculation.
+\item<2-> Actually, I just set up the calculation in Python and let it run in compiled code (Numpy). Python makes you think in terms of ``slow control'' and ``fast math.''
+\item<3-> The slow, dynamic, abstract programming model has value: it reaches out to match the way we (humans) think.
+\item<4-> But once we've specified a mathematical task, we want it to get out of the way.
 \end{itemize}
 \end{frame}
 
 \begin{frame}{Getting the data at full speed}
 \vspace{0.5 cm}
-ROOT data are stored in an efficient format--- arrays similar to the Numpy example on the previous page. (TBranches chopped up into TBaskets\ldots)
+ROOT data are stored in an efficient format--- arrays like the ones in the high-speed mass calculation. (TBranches chopped up into TBaskets\ldots)
 
 \vspace{1 cm}
-\uncover<2->{But {\tt TTree::GetEntry} is slow: pieces of each array are spliced into local variables each time it's called. (Also, it thwarts vectorization, has virtual function calls\ldots)}
+\uncover<2->{\textcolor{darkblue}{But {\tt TTree::GetEntry} is slow:} pieces of each array are spliced into local variables each time it's called. (Also, it thwarts vectorization, has virtual function calls\ldots)}
 
 \vspace{1 cm}
-\uncover<3->{Accessing the data without {\tt GetEntry} (which includes {\tt TTree::Draw}!) is an order of magnitude faster. We're adding a method to ROOT 6.12 (next version) to dump data directly into Numpy arrays.}
+\uncover<3->{Accessing the data without {\tt GetEntry} is an order of magnitude faster.
+
+\vspace{0.2 cm}
+We're adding a method to ROOT \only<3>{6.12 (next version)}\only<4>{\xcancel{6.12 (next version)} 6.14 (next summer)} to dump data directly into Numpy arrays.}
 \end{frame}
 
 \begin{frame}{Illustration using NanoAOD decompression rate studies}
@@ -209,7 +235,7 @@ ROOT data are stored in an efficient format--- arrays similar to the Numpy examp
 \end{columns}
 \end{frame}
 
-\begin{frame}{ROOT 6.12 isn't out yet\ldots}
+\begin{frame}{Next summer is a long time to wait\ldots}
 \vspace{0.5 cm}
 So I wrote this access method in pure Python+Numpy:
 
@@ -224,7 +250,7 @@ So I wrote this access method in pure Python+Numpy:
 \end{center}
 \end{frame}
 
-\begin{frame}{But\ldots\ Python is slow\ldots\ why Python???}
+\begin{frame}{But\ldots\ Python is slow!}
 \vspace{0.4 cm}
 {\large If you're reading a reasonably large file (GB+), most of the time is spent in a Numpy call, not Python.}
 
@@ -248,14 +274,14 @@ Python/uproot & 0.064 sec & 133 MHz & 1020 MB/sec
 {\scriptsize $^{\mbox{\scriptsize *}}$from \href{https://indico.cern.ch/event/567550/contributions/2628878/}{\textcolor{blue}{Jakob Blomer's 2017 ACAT talk}} about ROOT performance, 1 GB uncompressed, flat table from LHCb.}
 \end{uncoverenv}
 
-\vspace{-6.6 cm}\hfill\begin{minipage}{0.41\linewidth}
+\vspace{-6.6 cm}\hfill\begin{minipage}{0.3\linewidth}
 \begin{uncoverenv}<3->
 \begin{center}
 \large
 \textcolor{darkblue}{about 5$\times$ faster than C++/{\tt GetEntry}}
 
 \vspace{0.1 cm}
-\textcolor{darkblue}{(the new ROOT method is 30$\times$)}
+\textcolor{darkblue}{(new method in ROOT 6.14 is 30$\times$)}
 \end{center}
 \end{uncoverenv}
 \vspace{6.6 cm}
